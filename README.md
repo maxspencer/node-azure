@@ -11,12 +11,13 @@ Any feedback / patches gratefully received
 Depends on xml2js which can be installed via NPM
   
 Rob Blackwell
+
 August 2011
 
 TODO
 
-Implement the wider APIs
-Make it NPM installable
-Implement a parser for Azure connection strings
-Implement a queue reader that looks like a callback
-Implement other Azure APIs? AppFabric? Service Management?
+* Implement the wider APIs
+* Make it NPM installable
+* Implement a parser for Azure connection strings
+* Implement a queue reader that looks like a callback
+* Implement other Azure APIs? AppFabric? Service Management?

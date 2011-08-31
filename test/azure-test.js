@@ -15,8 +15,6 @@ function test_hmac_string () {
 	assert.equal(actual, expected, 'hmac_string test failed');
 }
 
-test_hmac_string() ;
-
 function test_canonicalized_resource_format_1 () {
   
 	var account = {
@@ -35,8 +33,6 @@ function test_canonicalized_resource_format_1 () {
 	assert.equal(actual,expected, 'canonicalized_resource-format_1 failed');
 }
 
-test_canonicalized_resource_format_1();
-
 function test_canonicalized_headers () {
   
 	var req = {
@@ -48,8 +44,6 @@ function test_canonicalized_headers () {
 	assert.equal(actual,expected, 'canonicalized_headers failed');
 }
 
-test_canonicalized_headers();
-
 function test_container () {
   
 	azure.create_container(test_account, "foobar3", 
@@ -60,28 +54,37 @@ function test_container () {
 			});
 }
 
-test_container();
-
 function test_list_containers () {
 	azure.list_containers(test_account,
                               function(x) { assert.ok(azure.ok(x),"test_list_containers failed")});
 }
-                              
-test_list_containers();
 
-function test_list_tables () {
-	azure.list_tables(test_account,
-                              function(x) { assert.ok(azure.ok(x),"test_list_tables failed")});
+function test_query_tables () {
+	azure.query_tables(test_account,
+                              function(x) { assert.ok(azure.ok(x),"test_query_tables failed")});
 }
-                              
-test_list_tables();
-
+      
 function test_list_queues () {
 	azure.list_queues(test_account,
                               function(x) { assert.ok(azure.ok(x),"test_list_queues failed")});
 }
                               
-test_list_queues();
+
+
+
+function run_tests() {
+
+	test_hmac_string() ;
+	test_canonicalized_resource_format_1();
+	test_canonicalized_headers();
+	test_container();
+	test_list_containers();
+	test_query_tables();
+	test_list_queues();
+
+}
+
+run_tests();
 
 //azure.get_container_properties(test_account, "packages", azure.show_response);
 //azure.get_container_metadata(test_account, "packages", azure.show_response);
@@ -89,6 +92,11 @@ test_list_queues();
 //azure.get_blob(test_account, 'packages', 'ed-isla.JPG', azure.show_response);
 //azure.download_blob(test_account, 'packages', 'ed-isla.JPG', "d:\\junk\\foo.jpg");
 
+//azure.list_queues(test_account);
+
+
+
+//azure.put_message(test_account, "foo", "<QueueMessage><MessageText>Hello</MessageText></QueueMessage>");
 
 
 

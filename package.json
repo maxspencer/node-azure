@@ -1,0 +1,8 @@
+{
+    "name": "node-azure",
+    "description": "Windows Azure library for Node.js",
+    "version": "0.1.0",
+    "author": "Rob Blackwell",
+    "dependencies": {xml2js},
+    "devDependencies": {}
+}

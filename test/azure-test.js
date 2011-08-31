@@ -98,5 +98,7 @@ run_tests();
 
 //azure.put_message(test_account, "foo", "<QueueMessage><MessageText>Hello</MessageText></QueueMessage>");
 
+azure.put_blob (test_account, "packages", azure.BlockBlob, "foo.txt", "hello world");
+
 
 

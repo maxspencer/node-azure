@@ -61,26 +61,14 @@ function run_core_tests() {
 function test_container () {
 	azure.create_container(test_account, "foobar3", function(x) {
 		azure.delete_container(test_account, "foobar3", function(x) {
-			assert.ok(azure.accepted(x),"test_container failed")
+			assert.ok(azure.accepted(x), "test_container failed")
 		});
 	});
 }
 
 function test_list_containers () {
 	azure.list_containers(test_account, function(x) {
-		assert.ok(azure.ok(x),"test_list_containers failed")
-	});
-}
-
-function test_query_tables () {
-	azure.query_tables(test_account, function(x) {
-		assert.ok(azure.ok(x),"test_query_tables failed")
-	});
-}
-
-function test_list_queues () {
-	azure.list_queues(test_account, function(x) {
-		assert.ok(azure.ok(x),"test_list_queues failed")
+		assert.ok(azure.ok(x), "test_list_containers failed")
 	});
 }
 
@@ -88,24 +76,36 @@ function test_list_queues () {
 function run_blob_tests() {
 	test_container();
 	test_list_containers();
-	test_query_tables();
-	test_list_queues();
 }
 
 /**************************
 * Queue Service API Tests *
 **************************/
 
+function test_list_queues () {
+	azure.list_queues(test_account, function(x) {
+		assert.ok(azure.ok(x), "test_list_queues failed")
+	});
+}
+
 // Group
 function run_queue_tests() {
+	test_list_queues();
 }
 
 /**************************
 * Table Service API Tests *
 **************************/
 
+function test_query_tables () {
+	azure.query_tables(test_account, function(x) {
+		assert.ok(azure.ok(x), "test_query_tables failed")
+	});
+}
+
 // Group
 function run_table_tests() {
+	test_query_tables();
 }
 
 /******************************************************************************/
@@ -126,13 +126,8 @@ run_all_tests();
 //azure.list_blobs(test_account, 'packages');
 //azure.get_blob(test_account, 'packages', 'ed-isla.JPG', azure.show_response);
 //azure.download_blob(test_account, 'packages', 'ed-isla.JPG', "d:\\junk\\foo.jpg");
-
 //azure.list_queues(test_account);
-
-
-
 //azure.put_message(test_account, "foo", "<QueueMessage><MessageText>Hello</MessageText></QueueMessage>");
-
 //azure.put_blob (test_account, "packages", azure.BlockBlob, "foo.txt", "hello world");
 
 azure.create_table(test_account, "wibble2", azure.show_response);

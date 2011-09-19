@@ -58,23 +58,33 @@ function run_core_tests() {
 * Blob Service API Tests *
 *************************/
 
-function test_list_containers () {
+function test_list_containers() {
 	azure.list_containers(test_account, function(x) {
-		assert.ok(azure.ok(x), 'test_list_containers failed.')
+		assert.ok(azure.ok(x), 'test_list_containers failed.');
 	});
 }
 
-function test_create_delete_container () {
-	var c = 'tc-test-container';
-	azure.create_container(test_account, c, function(x) {
+function test_create_container() {
+	var c = 'test-create-container';
+	azure.delete_container(test_account, c, function() {
+		azure.create_container(test_account, c, function(x) {
+			assert.ok(azure.created(x), 'test_create_container failed.');
+			azure.delete_container(test_account, c) // Clean up.
+		});
+	});
+}
+
+function test_delete_container() {
+	var c = 'test-delete-container';
+	azure.create_container(test_account, c, function() {
 		azure.delete_container(test_account, c, function(x) {
-			assert.ok(azure.accepted(x), 'test_create_delete_container failed.')
+			assert.ok(azure.accepted(x), 'test_delete_container failed.');
 		});
 	});
 }
 
 function test_get_container_properties() {
-	var c = 'tc-test-get-container-properties';
+	var c = 'test-get-container-properties';
 	azure.create_container(test_account, c, function() {
 		azure.get_container_properties(test_account, c, function(x) {
 			assert.ok(azure.ok(x), 'test_get_container_properties failed.');
@@ -84,7 +94,7 @@ function test_get_container_properties() {
 }
 
 function test_get_container_metadata() {
-	var c = 'tc-test-get-ontainer-metadata';
+	var c = 'test-get-container-metadata';
 	azure.create_container(test_account, c, function() {
 		azure.get_container_metadata(test_account, c, function(x) {
 			assert.ok(azure.ok(x), 'test_get_container_metadata failed.');
@@ -94,7 +104,7 @@ function test_get_container_metadata() {
 }
 
 function test_set_container_metadata() {
-	var c = 'tc-test-set-container-metadata';
+	var c = 'test-set-container-metadata';
 	var expected = 'onetwothree'
 	azure.create_container(test_account, c, set_meta);
 	
@@ -121,7 +131,7 @@ function test_set_container_metadata() {
 }
 
 function test_list_blobs() {
-	var c = 'tc-test-list-blobs';
+	var c = 'test-list-blobs';
 	azure.create_container(test_account, c, function() {
 		azure.list_blobs(test_account, c, function(x) {
 			assert.ok(azure.ok(x), 'test_list_blobs failed.');
@@ -133,7 +143,8 @@ function test_list_blobs() {
 // Group
 function run_blob_tests() {
 	test_list_containers();
-	test_create_delete_container();
+	test_create_container();
+	test_delete_container();
 	test_get_container_properties();
 	test_get_container_metadata();
 	test_set_container_metadata();
@@ -144,15 +155,38 @@ function run_blob_tests() {
 * Queue Service API Tests *
 **************************/
 
-function test_list_queues () {
+function test_list_queues() {
 	azure.list_queues(test_account, function(x) {
-		assert.ok(azure.ok(x), "test_list_queues failed")
+		assert.ok(azure.ok(x), 'test_list_queues failed.');
+	});
+}
+
+function test_create_queue() {
+	var q = 'test-create-queue'
+	// Must ensure container of this name doesn't already exists otherwise a 209
+	// Conflict error is returned.
+	azure.delete_queue(test_account, q, function() {
+		azure.create_queue(test_account, q, function(x) {
+			assert.ok(azure.created(x), 'test_create_queue failed.');
+			azure.delete_queue(test_account, q); // Clean up.
+		});
+	});
+}
+
+function test_delete_queue() {
+	var q = 'test-delete-queue';
+	azure.create_queue(test_account, q, function() {
+		azure.delete_queue(test_account, q, function(x) {
+			assert.equal(x.statusCode, 204, 'test_delete_queue failed.')
+		});
 	});
 }
 
 // Group
 function run_queue_tests() {
 	test_list_queues();
+	test_create_queue();
+	test_delete_queue();
 }
 
 /**************************
@@ -181,6 +215,9 @@ function run_all_tests() {
 
 /******************************************************************************/
 
+//azure.list_queues(test_account, azure.show_response);
+//azure.delete_queue(test_account, q); // Clean up.
+
 run_all_tests();
 
 //azure.get_container_properties(test_account, "packages", azure.show_response);
@@ -188,7 +225,8 @@ run_all_tests();
 //azure.list_blobs(test_account, 'packages');
 //azure.get_blob(test_account, 'packages', 'ed-isla.JPG', azure.show_response);
 //azure.download_blob(test_account, 'packages', 'ed-isla.JPG', "d:\\junk\\foo.jpg");
-//azure.list_queues(test_account);
+//azure.list_containers(test_account, azure.show_response);
+//azure.list_queues(test_account, azure.show_response);
 //azure.put_message(test_account, "foo", "<QueueMessage><MessageText>Hello</MessageText></QueueMessage>");
 //azure.put_blob (test_account, "packages", azure.BlockBlob, "foo.txt", "hello world");
 

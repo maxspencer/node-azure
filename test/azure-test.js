@@ -58,24 +58,86 @@ function run_core_tests() {
 * Blob Service API Tests *
 *************************/
 
-function test_container () {
-	azure.create_container(test_account, "foobar3", function(x) {
-		azure.delete_container(test_account, "foobar3", function(x) {
-			assert.ok(azure.accepted(x), "test_container failed")
+function test_list_containers () {
+	azure.list_containers(test_account, function(x) {
+		assert.ok(azure.ok(x), 'test_list_containers failed.')
+	});
+}
+
+function test_create_delete_container () {
+	var c = 'tc-test-container';
+	azure.create_container(test_account, c, function(x) {
+		azure.delete_container(test_account, c, function(x) {
+			assert.ok(azure.accepted(x), 'test_create_delete_container failed.')
 		});
 	});
 }
 
-function test_list_containers () {
-	azure.list_containers(test_account, function(x) {
-		assert.ok(azure.ok(x), "test_list_containers failed")
+function test_get_container_properties() {
+	var c = 'tc-test-get-container-properties';
+	azure.create_container(test_account, c, function() {
+		azure.get_container_properties(test_account, c, function(x) {
+			assert.ok(azure.ok(x), 'test_get_container_properties failed.');
+			azure.delete_container(test_account, c); // Clean up.
+		});
+	});
+}
+
+function test_get_container_metadata() {
+	var c = 'tc-test-get-ontainer-metadata';
+	azure.create_container(test_account, c, function() {
+		azure.get_container_metadata(test_account, c, function(x) {
+			assert.ok(azure.ok(x), 'test_get_container_metadata failed.');
+			azure.delete_container(test_account, c); // Clean up.
+		});
+	});
+}
+
+function test_set_container_metadata() {
+	var c = 'tc-test-set-container-metadata';
+	var expected = 'onetwothree'
+	azure.create_container(test_account, c, set_meta);
+	
+	function set_meta() {
+		azure.set_container_metadata(
+		test_account, 
+		c, 
+		{'x-ms-meta-testing': expected},
+		get_meta
+		);
+	}
+
+	function get_meta() {
+		azure.get_container_metadata(test_account, c, function(x) {
+			assert.ok(azure.ok(x), 'test_set_container_metadata failed. Unable to get metadata.');
+			assert.equal(
+				x.headers['x-ms-meta-testing'],
+				expected,
+				'test_set_container_metadata failed. Expecting \'' + expected + '\', got \'' + x.headers['x-ms-meta-testing'] + '\''
+			);
+			azure.delete_container(test_account, c); // Clean up.
+		});
+	}
+}
+
+function test_list_blobs() {
+	var c = 'tc-test-list-blobs';
+	azure.create_container(test_account, c, function() {
+		azure.list_blobs(test_account, c, function(x) {
+			assert.ok(azure.ok(x), 'test_list_blobs failed.');
+			azure.delete_container(test_account, c); // Clean up.
+		});
 	});
 }
 
 // Group
 function run_blob_tests() {
-	test_container();
 	test_list_containers();
+	test_create_delete_container();
+	test_get_container_properties();
+	test_get_container_metadata();
+	test_set_container_metadata();
+	test_list_blobs();
 }
 
 /**************************
@@ -130,6 +192,4 @@ run_all_tests();
 //azure.put_message(test_account, "foo", "<QueueMessage><MessageText>Hello</MessageText></QueueMessage>");
 //azure.put_blob (test_account, "packages", azure.BlockBlob, "foo.txt", "hello world");
 
-azure.create_table(test_account, "wibble2", azure.show_response);
-
-
+//azure.create_table(test_account, "wibble2", azure.show_response);

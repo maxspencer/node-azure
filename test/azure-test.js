@@ -2,7 +2,15 @@ var assert = require('assert');
 var azure = require('../lib/azure.js');
 
 // Use this account for testing ..
-var test_account = azure.devstore_account;
+var test_account = 
+{
+	name : "two10ra",
+	key : "dmIMUY1mg/qPeOgGmCkO333L26cNcnUA1uMcSSOFMB3cB8LkdDkh02RaYTPLBL8qMqnqazqd6uMxI2bJJEnj0g==",
+	blob_storage_url : "https://two10ra.blob.core.windows.net",
+	table_storage_url : "https://two10ra.table.core.windows.net",
+	queue_storage_url : "https://two10ra.queue.core.windows.net"
+}
+
 
 /***********************************
 * Core request functionality Tests *
@@ -193,15 +201,29 @@ function run_queue_tests() {
 * Table Service API Tests *
 **************************/
 
-function test_query_tables () {
+function test_query_tables() {
 	azure.query_tables(test_account, function(x) {
 		assert.ok(azure.ok(x), "test_query_tables failed")
 	});
 }
 
+function test_insert_entity() {
+	azure.create_table(test_account, 'testtable', function(y){
+		//console.log(y.statusCode);
+		//assert.ok(azure.ok(y), "create_table failed");
+		azure.insert_entity(test_account, 'testtable', { RowKey:'123', PartitionKey: 'xyz', Value: 'foo' }, function(x) {
+			console.log(azure.created(x));
+			//azure.show_response(x);
+			assert.ok(azure.created(x), "test_insert_entity failed");
+		});
+	});
+}
+
+
 // Group
 function run_table_tests() {
 	test_query_tables();
+	test_insert_entity();
 }
 
 /******************************************************************************/
@@ -217,7 +239,7 @@ function run_all_tests() {
 
 //azure.list_queues(test_account, azure.show_response);
 //azure.delete_queue(test_account, q); // Clean up.
-
+//test_insert_entity();
 run_all_tests();
 
 //azure.get_container_properties(test_account, "packages", azure.show_response);

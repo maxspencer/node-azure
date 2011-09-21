@@ -249,16 +249,156 @@ function run_queue_tests() {
 /**************************
 * Table Service API Tests *
 **************************/
+var timeout = 500;
 
-function test_query_tables () {
-	azure.query_tables(test_account, function(x) {
-		assert.ok(azure.ok(x), "test_query_tables failed")
+function test_query_tables() {
+
+	azure.create_table(test_account, 'testquerytables', function(){
+		setTimeout(function(){
+			azure.query_tables(test_account, function(tables) {
+				var found = false;
+				for ( var i=0, len=tables.length; i<len; ++i ){
+					if (tables[i].TableName == 'testquerytables'){
+						found = true;
+					}
+				}
+				assert.ok(found, 'test_query_tables');
+				azure.delete_table(test_account, 'testquerytables', function(x){});
+			});
+		}, timeout)
 	});
+}
+
+function test_insert_entity() {
+	azure.create_table(test_account, 'testinserttable', function(y){
+		setTimeout(function(){
+			azure.insert_entity(test_account, 'testinserttable', { RowKey:'123', PartitionKey: 'xyz', Value: 'foo' }, function(x) {
+				setTimeout(function(){
+					azure.get_entity(test_account, 'testinserttable', 'xyz', '123', function(entity){
+						assert.ok(entity.Value == 'foo', 'test_insert_entity');
+						
+						azure.delete_table(test_account, 'testinserttable', function(x){});
+					});
+				}, timeout);
+			});
+		}, timeout);
+	});
+}
+
+
+function test_query_entities() {
+
+	azure.create_table(test_account, 'testquerytable', function(){
+		setTimeout(function(){
+			azure.insert_entity(test_account, 'testquerytable', { RowKey:'1', PartitionKey: 'xyz', Value: 'foo' }, function(x) {});
+			azure.insert_entity(test_account, 'testquerytable', { RowKey:'2', PartitionKey: 'xyz', Value: 'foo' }, function(x) {});
+			azure.insert_entity(test_account, 'testquerytable', { RowKey:'3', PartitionKey: 'xyz', Value: 'bar' }, function(x) {});
+			azure.insert_entity(test_account, 'testquerytable', { RowKey:'4', PartitionKey: 'xyz', Value: 'bar' }, function(x) {});
+			azure.insert_entity(test_account, 'testquerytable', { RowKey:'5', PartitionKey: 'xyz', Value: 'bar' }, function(x) {});
+			azure.insert_entity(test_account, 'testquerytable', { RowKey:'6', PartitionKey: 'xyz', Value: 'baz' }, function(x) {});
+
+			setTimeout(function(){
+				azure.get_entity(test_account, 'testquerytable', 'xyz', '3', function(entity){
+					assert.ok(entity != undefined, 'test_query_entities get_entity is undefined');
+					assert.ok(entity.Value == 'bar', 'test_query_entities values is wrong');
+				});
+				
+				azure.get_entity(test_account, 'testquerytable', 'xyz', '7', function(entity){
+					assert.ok(entity == undefined, 'test_query_entities get_entity is not undefined');
+				});
+				
+				azure.query_entities(test_account, 'testquerytable', "Value+eq+'foo'", function(entities){
+					assert.ok(entities.length == 2, 'test_query_entities query_entities');
+				});
+				
+				azure.query_entities(test_account, 'testquerytable', "Value+eq+'qux'", function(entities){
+					assert.ok(entities.length == 0, 'test_query_entities query_entities');
+				});
+
+				azure.query_entities(test_account, 'testquerytable', "Value+eq+'baz'", function(entities){
+					assert.ok(entities.length == 1, 'test_query_entities query_entities');
+				});
+
+				setTimeout(function(){
+					// clear up
+					azure.delete_table(test_account, 'testquerytable', function(val){});
+				}, timeout * 2);
+					
+			}, timeout);
+		}, timeout);
+	});
+	
+
+}
+
+function test_delete_entity() {
+
+
+	azure.create_table(test_account, 'deleteentitytable', function(){
+		azure.insert_entity(test_account, 'deleteentitytable', { RowKey:'1', PartitionKey: 'xyz', Value: 'foo' }, function(x) {
+			setTimeout(function(){
+				azure.delete_entity(test_account, 'deleteentitytable', 'xyz', '1', function(){
+					
+					azure.get_entity(test_account, 'deleteentitytable', 'xyz', '1', function(entity){
+						assert.ok(entity == undefined, 'test_delete_entity get_entity is not undefined');
+						
+						azure.delete_table(test_account, 'deleteentitytable', function(result){});
+					});					
+					
+				});
+			}, timeout);
+		});
+	});
+
+}
+
+function test_delete_table(){
+
+	azure.create_table(test_account, 'deletetable', function(result){
+		//assert.ok(result);
+		setTimeout(function(){
+			
+			azure.delete_table(test_account, 'deletetable', function(result){
+				assert.ok(result, "test_delete_table");
+			});
+		
+		},timeout);
+	});
+}
+
+function test_update_entity(){
+
+	azure.create_table(test_account, 'updatetable', function(result){
+		setTimeout(function(){
+			var obj = {PartitionKey: 'xyz', RowKey: 'updatekey', Value:'A'};
+			azure.insert_entity(test_account, 'updatetable', obj, function(){
+				setTimeout(function(){
+					obj.Value = 'B';
+					azure.update_entity(test_account, 'updatetable', obj, function(){
+						setTimeout(function(){
+							azure.get_entity(test_account, 'updatetable', 'xyz', 'updatekey', function(entity){
+								assert.ok(entity.Value == 'B', 'test_update_entity');
+								azure.delete_table(test_account, 'updatetable',  function(val){
+									assert.ok(val);
+								});
+							});
+						} ,timeout);
+					});
+				}, timeout);
+			});
+		}, timeout);
+	});
+
 }
 
 // Group
 function run_table_tests() {
 	test_query_tables();
+	test_insert_entity();
+	test_query_entities();
+	test_delete_entity();
+	test_delete_table();
+	test_update_entity();
 }
 
 /******************************************************************************/
@@ -272,19 +412,4 @@ function run_all_tests() {
 
 /******************************************************************************/
 
-//azure.list_queues(test_account, azure.show_response);
-//azure.delete_queue(test_account, q); // Clean up.
-
-//azure.list_containers(test_account, azure.show_response);
-
 run_all_tests();
-
-//azure.get_container_properties(test_account, "packages", azure.show_response);
-//azure.get_container_metadata(test_account, "packages", azure.show_response);
-//azure.list_blobs(test_account, 'packages');
-//azure.get_blob(test_account, 'packages', 'ed-isla.JPG', azure.show_response);
-//azure.download_blob(test_account, 'packages', 'ed-isla.JPG', "d:\\junk\\foo.jpg");
-//azure.list_queues(test_account, azure.show_response);
-//azure.put_message(test_account, "foo", "<QueueMessage><MessageText>Hello</MessageText></QueueMessage>");
-//azure.put_blob (test_account, "packages", azure.BlockBlob, "foo.txt", "hello world");
-//azure.create_table(test_account, "wibble2", azure.show_response);

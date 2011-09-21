@@ -214,16 +214,35 @@ function test_insert_entity() {
 		azure.insert_entity(test_account, 'testtable', { RowKey:'123', PartitionKey: 'xyz', Value: 'foo' }, function(x) {
 			//console.log(azure.created(x));
 			//azure.show_response(x);
-			assert.ok(azure.created(x), "test_insert_entity failed");
+			//assert.ok(azure.created(x), "test_insert_entity failed");
 		});
 	});
 }
 
+function test_get_entity() {
+	azure.get_entity(test_account, 'testtable', 'xyz', '123', function(result) {
+		assert.ok(result != undefined, "test_get_entity");
+	});
+	
+	azure.get_entity(test_account, 'testtable', 'xyz', 'DoesNotExist', function(result) {
+		assert.ok(result == undefined, "test_get_entity");
+	});
+}
+
+function test_query_entities() {
+	azure.query_entities(test_account, 'testtable', "Value+eq+'foo'", function(result) {
+		assert.ok(result != undefined, "test_query_entities");
+	});
+
+
+}
 
 // Group
 function run_table_tests() {
 	test_query_tables();
 	test_insert_entity();
+	test_get_entity();
+	test_query_entities();
 }
 
 /******************************************************************************/
@@ -241,7 +260,11 @@ function run_all_tests() {
 //azure.delete_queue(test_account, q); // Clean up.
 //test_insert_entity();
 //test_query_tables();
+//test_get_entity();
+//test_query_entities();
+//test_list_containers();
 run_all_tests();
+
 
 //azure.get_container_properties(test_account, "packages", azure.show_response);
 //azure.get_container_metadata(test_account, "packages", azure.show_response);

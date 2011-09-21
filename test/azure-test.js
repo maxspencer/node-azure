@@ -203,7 +203,7 @@ function run_queue_tests() {
 
 function test_query_tables() {
 	azure.query_tables(test_account, function(x) {
-		assert.ok(azure.ok(x), "test_query_tables failed")
+		assert.ok(x.length >= 0, 'query_tables');
 	});
 }
 
@@ -212,7 +212,7 @@ function test_insert_entity() {
 		//console.log(y.statusCode);
 		//assert.ok(azure.ok(y), "create_table failed");
 		azure.insert_entity(test_account, 'testtable', { RowKey:'123', PartitionKey: 'xyz', Value: 'foo' }, function(x) {
-			console.log(azure.created(x));
+			//console.log(azure.created(x));
 			//azure.show_response(x);
 			assert.ok(azure.created(x), "test_insert_entity failed");
 		});
@@ -240,6 +240,7 @@ function run_all_tests() {
 //azure.list_queues(test_account, azure.show_response);
 //azure.delete_queue(test_account, q); // Clean up.
 //test_insert_entity();
+//test_query_tables();
 run_all_tests();
 
 //azure.get_container_properties(test_account, "packages", azure.show_response);

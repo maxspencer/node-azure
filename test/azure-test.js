@@ -39,7 +39,10 @@ function test_canonicalized_resource_format_1 () {
 function test_canonicalized_headers () {
 	var req = {
 		url : "http://myaccount.blob.core.windows.net/?comp=list&restype=container",
-		headers: {'x-ms-version' : '2009-09-19','x-ms-date' : 'Sun, 12 Jun 2011 10:00:45 GMT'}
+		headers: {
+			'x-ms-version' : '2009-09-19',
+			'x-ms-date' : 'Sun, 12 Jun 2011 10:00:45 GMT'
+		}
 	}
 	
 	var actual = azure.canonicalized_headers(req);
@@ -119,11 +122,13 @@ function test_set_container_metadata() {
 
 	function get_meta() {
 		azure.get_container_metadata(test_account, c, function(x) {
-			assert.ok(azure.ok(x), 'test_set_container_metadata failed. Unable to get metadata.');
+			assert.ok(azure.ok(x), 'test_set_container_metadata failed. \
+									Unable to get metadata.');
 			assert.equal(
 				x.headers['x-ms-meta-testing'],
 				expected,
-				'test_set_container_metadata failed. Expecting \'' + expected + '\', got \'' + x.headers['x-ms-meta-testing'] + '\''
+				'test_set_container_metadata failed. Expecting \'' + expected +
+				'\', got \'' + x.headers['x-ms-meta-testing'] + '\''
 			);
 			azure.delete_container(test_account, c); // Clean up.
 		});
@@ -140,6 +145,55 @@ function test_list_blobs() {
 	});
 }
 
+function test_put_blob() {
+	var c = 'test-put-blob';
+	var b = 'test-put-blob';
+	azure.create_container(test_account, c, function() {
+		azure.put_blob(test_account, c, azure.BlockBlob, b, 
+					   'Hello world!', {'Content-Type': 'text/plain'},
+					   function(x) {
+			assert.ok(azure.created(x), 'test_put_blob failed. Status code: ' + x.statusCode);
+			azure.delete_container(test_account, c);
+		});
+	});
+}
+
+function test_get_blob() {
+	var c = 'test-get-blob';
+	var b = 'test-get-blob';
+	var wait = 1000;
+	azure.create_container(test_account, c, function() {
+		azure.put_blob(test_account, c, azure.BlockBlob, b, 
+					   'Hello world!', {'Content-Type': 'text/plain'},
+					   function() { setTimeout(get_blob(), wait); });
+	});
+	
+	function get_blob() {
+		azure.get_blob(test_account, c, b, function(x) {	
+			assert.ok(azure.ok(x), 'test_get_blob failed. Blob could not be found within the specified wait time (' + wait + 'ms). Status code: ' + x.statusCode);
+			azure.delete_container(test_account, c);
+		});
+	}
+}
+
+function test_delete_blob() {
+	var c = 'test-delete-blob';
+	var b = 'test-delete-blob';
+	var wait = 1000;
+	azure.create_container(test_account, c, function() {
+		azure.put_blob(test_account, c, azure.BlockBlob, b, 
+					   'Hello world!', {'Content-Type': 'text/plain'},
+					   function() { setTimeout(del_blob(), wait); });
+	});
+	
+	function del_blob() {
+		azure.delete_blob(test_account, c, b, function(x) {
+			assert.ok(azure.accepted(x), 'test_delete_blob failed. Blob could not be found within the specified wait time (' + wait + 'ms). Status code: ' + x.statusCode);
+			azure.delete_container(test_account, c);
+		});
+	}
+}
+
 // Group
 function run_blob_tests() {
 	test_list_containers();
@@ -149,6 +203,9 @@ function run_blob_tests() {
 	test_get_container_metadata();
 	test_set_container_metadata();
 	test_list_blobs();
+	test_put_blob();
+	test_get_blob();
+	test_delete_blob();
 }
 
 /**************************
@@ -218,6 +275,8 @@ function run_all_tests() {
 //azure.list_queues(test_account, azure.show_response);
 //azure.delete_queue(test_account, q); // Clean up.
 
+//azure.list_containers(test_account, azure.show_response);
+
 run_all_tests();
 
 //azure.get_container_properties(test_account, "packages", azure.show_response);
@@ -225,9 +284,7 @@ run_all_tests();
 //azure.list_blobs(test_account, 'packages');
 //azure.get_blob(test_account, 'packages', 'ed-isla.JPG', azure.show_response);
 //azure.download_blob(test_account, 'packages', 'ed-isla.JPG', "d:\\junk\\foo.jpg");
-//azure.list_containers(test_account, azure.show_response);
 //azure.list_queues(test_account, azure.show_response);
 //azure.put_message(test_account, "foo", "<QueueMessage><MessageText>Hello</MessageText></QueueMessage>");
 //azure.put_blob (test_account, "packages", azure.BlockBlob, "foo.txt", "hello world");
-
 //azure.create_table(test_account, "wibble2", azure.show_response);
